@@ -53,7 +53,7 @@ policies:
     access_ctrl: accept
 
   - policy_num: 506
-    policy_name: Policy5
+    policy_name: Policy6
     src_port: port1
     dest_port: port3
     src_addr: all
