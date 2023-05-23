@@ -12,3 +12,24 @@
       register: ret
 
     - debug: var=ret
+
+    - fortinet.fortios.fortios_firewall_policy:
+        vdom: root
+        state: present
+        firewall_policy:
+          policyid: "{{ policy_num }}"
+          name: "{{ policy_name }}"
+          srcintf:
+            - name: "{{ src_port }}"
+          dstintf:
+            - name: "{{ dest_port }}"
+          srcaddr:
+            - name: "{{ src_addr }}"
+          dstaddr:
+            - name: "{{ dest_addr}}"
+          service:
+            - name: "{{ protocol }}"
+          status: enable
+          schedule: always
+          action: "{{ access_ctrl }}"
+          nat: enable
