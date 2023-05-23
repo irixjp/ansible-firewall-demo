@@ -11,23 +11,23 @@
 
     - debug: var=policies
 
-#    - fortinet.fortios.fortios_firewall_policy:
-#        vdom: root
-#        state: present
-#        firewall_policy:
-#          policyid: "{{ policy_num }}"
-#          name: "{{ policy_name }}"
-#          srcintf:
-#            - name: "{{ src_port }}"
-#          dstintf:
-#            - name: "{{ dest_port }}"
-#          srcaddr:
-#            - name: "{{ src_addr }}"
-#          dstaddr:
-#            - name: "{{ dest_addr}}"
-#          service:
-#            - name: "{{ protocol }}"
-#          status: enable
-#          schedule: always
-#          action: "{{ access_ctrl }}"
-#          nat: enable
+    - fortinet.fortios.fortios_firewall_policy:
+        vdom: root
+        state: present
+        firewall_policy:
+          policyid: "{{ item.policy_num }}"
+          name: "{{ item.policy_name }}"
+          srcintf:
+            - name: "{{ item.src_port }}"
+          dstintf:
+            - name: "{{ item.dest_port }}"
+          srcaddr:
+            - name: "{{ item.src_addr }}"
+          dstaddr:
+            - name: "{{ item.dest_addr}}"
+          service: "{{ item.protocol }}"
+          status: enable
+          schedule: always
+          action: "{{ item.access_ctrl }}"
+          nat: enable
+      loop: "{{ policies }}"
