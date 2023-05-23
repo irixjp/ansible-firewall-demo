@@ -1,0 +1,33 @@
+---
+- hosts: all
+  gather_facts: false
+  vars:
+    ansible_httpapi_use_ssl: yes
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 443
+  vars_files:
+    - "{{ load_file_name }}"
+  tasks:
+
+    debug: var=policies
+
+#    - fortinet.fortios.fortios_firewall_policy:
+#        vdom: root
+#        state: present
+#        firewall_policy:
+#          policyid: "{{ policy_num }}"
+#          name: "{{ policy_name }}"
+#          srcintf:
+#            - name: "{{ src_port }}"
+#          dstintf:
+#            - name: "{{ dest_port }}"
+#          srcaddr:
+#            - name: "{{ src_addr }}"
+#          dstaddr:
+#            - name: "{{ dest_addr}}"
+#          service:
+#            - name: "{{ protocol }}"
+#          status: enable
+#          schedule: always
+#          action: "{{ access_ctrl }}"
+#          nat: enable

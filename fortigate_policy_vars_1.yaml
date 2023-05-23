@@ -1,0 +1,42 @@
+policies:
+  - policy_num: 501
+    policy_name: Policy1
+    src_port: port1
+    dest_port: port2
+    src_addr: all
+    dest_addr: all
+    protocol:
+      - name: RDP
+      - name: HTTPS
+    access_ctrl: accept
+
+  - policy_num: 502
+    policy_name: Policy2
+    src_port: port1
+    dest_port: port3
+    src_addr: all
+    dest_addr: all
+    protocol:
+      - name: RDP
+      - name: HTTPS
+    access_ctrl: accept
+
+  - policy_num: 503
+    policy_name: Policy3
+    src_port: port1
+    dest_port: port2
+    src_addr: all
+    dest_addr: all
+    protocol:
+      - name: SMB
+    access_ctrl: accept
+
+  - policy_num: 503
+    policy_name: Policy3
+    src_port: port1
+    dest_port: port2
+    src_addr: all
+    dest_addr: all
+    protocol:
+      - name: SMB
+    access_ctrl: accept
