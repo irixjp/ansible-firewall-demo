@@ -29,7 +29,7 @@ policies:
     dest_addr: all
     protocol:
       - name: SMB
-    access_ctrl: accept
+    access_ctrl: deny
 
   - policy_num: 504
     policy_name: Policy4
@@ -38,7 +38,7 @@ policies:
     src_addr: all
     dest_addr: all
     protocol:
-      - name: SMB
+      - name: NFS
     access_ctrl: accept
 
   - policy_num: 505
@@ -49,6 +49,7 @@ policies:
     dest_addr: all
     protocol:
       - name: FTP
+      - name: NFS
     access_ctrl: accept
 
   - policy_num: 506
