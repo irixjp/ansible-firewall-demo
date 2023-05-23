@@ -1,0 +1,14 @@
+- hosts: fortios
+  gather_facts: false
+  vars:
+    ansible_httpapi_use_ssl: yes
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 443
+  tasks:
+
+    - fortinet.fortios.fortios_configuration_fact:
+        selectors:
+          - selector: system_interface
+      register: ret
+
+    - debug: var=ret
