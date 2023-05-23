@@ -8,9 +8,6 @@
   vars_files:
     - "{{ load_file_name }}"
   tasks:
-
-    - debug: var=policies
-
     - fortinet.fortios.fortios_firewall_policy:
         vdom: root
         state: present
