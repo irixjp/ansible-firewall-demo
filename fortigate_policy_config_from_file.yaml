@@ -9,7 +9,7 @@
     - "{{ load_file_name }}"
   tasks:
 
-    debug: var=policies
+    - debug: var=policies
 
 #    - fortinet.fortios.fortios_firewall_policy:
 #        vdom: root
