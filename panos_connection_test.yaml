@@ -1,7 +1,8 @@
 ---
 - hosts: all
   connection: local
-
+  environment:
+    PYTHONPATH: /usr/lib/python3.6/site-packages
   vars:
     device:
       ip_address: "{{ panos_url }}"
