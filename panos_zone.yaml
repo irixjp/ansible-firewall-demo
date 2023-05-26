@@ -11,13 +11,19 @@
   tasks:
     - paloaltonetworks.panos.panos_zone:
         provider: '{{ device }}'
-        zone: 'Untrust'
-        mode: 'layer3'
-
-    - paloaltonetworks.panos.panos_zone:
-        provider: '{{ device }}'
-        zone: 'Trust'
-        mode: 'layer3'
+        zone: "{{ item.zone }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - zone: Untrust1
+          mode: layer3
+        - zone: Untrust2
+          mode: layer3
+        - zone: Trust1
+          mode: layer3
+        - zone: Trust2
+          mode: layer3
+        - zone: Trust3
+          mode: layer3
 
 #    - paloaltonetworks.panos.panos_security_rule:
 #        provider: '{{ device }}'
