@@ -10,7 +10,55 @@ policies:
     destination_ip:
       - any
     application:
-      - ssh
+      - ftp
     rule_action: allow
     location: after
     existing_rule: "Policy0"
+
+  - rule_name: Policy2
+    description: Desc2
+    source_zone:
+      - Untrust1
+    source_ip:
+      - any
+    destination_zone:
+      - Trust2
+    destination_ip:
+      - any
+    application:
+      - nfs
+    rule_action: allow
+    location: after
+    existing_rule: "Policy1"
+
+  - rule_name: Policy3
+    description: Desc3
+    source_zone:
+      - Untrust1
+    source_ip:
+      - any
+    destination_zone:
+      - Trust3
+    destination_ip:
+      - any
+    application:
+      - ms-ds-smb
+    rule_action: allow
+    location: after
+    existing_rule: "Policy2"
+
+  - rule_name: Policy4
+    description: Desc4
+    source_zone:
+      - Untrust2
+    source_ip:
+      - any
+    destination_zone:
+      - Trust1
+    destination_ip:
+      - any
+    application:
+      - ssh
+    rule_action: allow
+    location: after
+    existing_rule: "Policy3"
