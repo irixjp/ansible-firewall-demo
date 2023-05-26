@@ -2,7 +2,16 @@
 - hosts: all
   connection: local
 
+  vars:
+    device:
+      ip_address: "{{ panos_url }}"
+      username: "{{ panos_user }}"
+      password: "{{ panos_password }}"
+
   tasks:
+    - shell: |
+        python -c 'import os, sys; print(sys.path)'
+
     - name: Gather facts for device
       paloaltonetworks.panos.panos_facts:
         provider: '{{ device }}'
