@@ -27,6 +27,7 @@ policies:
       - any
     application:
       - nfs
+      - ms-ds-smb
     rule_action: allow
     location: after
     existing_rule: "Policy1"
@@ -43,6 +44,7 @@ policies:
       - any
     application:
       - ms-ds-smb
+      - ftp
     rule_action: allow
     location: after
     existing_rule: "Policy2"
@@ -68,11 +70,11 @@ policies:
     source_zone:
       - Untrust2
     source_ip:
-      - any
+      - 10.0.0.0/16
     destination_zone:
       - Trust2
     destination_ip:
-      - any
+      - 192.168.0.0/24
     application:
       - nfs
     rule_action: allow
@@ -88,7 +90,8 @@ policies:
     destination_zone:
       - Trust3
     destination_ip:
-      - any
+      - 172.16.10.0/24
+      - 172.16.20.0/24
     application:
       - ftp
     rule_action: allow
