@@ -21,7 +21,7 @@
         destination_ip: "{{ item.destination_ip }}"
         application: "{{ item.application }}"
         action: "{{ item.rule_action }}"
-        location "{{ item.location }}"
+        location: "{{ item.location }}"
         existing_rule: "{{ item.existing_rule }}"
       loop: "{{ policies }}"
 
