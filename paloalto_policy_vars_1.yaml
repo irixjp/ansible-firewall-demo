@@ -12,5 +12,5 @@ policies:
     application:
       - ssh
     rule_action: allow
-    location: top
-    existing_rule: ""
+    location: after
+    existing_rule: "Policy0"
