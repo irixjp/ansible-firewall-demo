@@ -11,5 +11,5 @@ policies:
       - any
     application:
       - ssh
-    action: allow
+    rule_action: allow
 
