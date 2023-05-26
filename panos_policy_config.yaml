@@ -19,7 +19,7 @@
         destination_zone: "{{ destination_zone }}"
         destination_ip: "{{ destination_ip }}"
         application: "{{ application }}"
-        action: "{{ action }}"
+        action: "{{ rule_action }}"
 
     - paloaltonetworks.panos.panos_commit_firewall:
         provider: '{{ device }}'

@@ -60,3 +60,23 @@ policies:
     protocol:
       - name: FTP
     access_ctrl: accept
+
+  - policy_num: 507
+    policy_name: Policy7
+    src_port: port2
+    dest_port: port3
+    src_addr: all
+    dest_addr: all
+    protocol:
+      - name: SSH
+    access_ctrl: accept
+
+  - policy_num: 508
+    policy_name: Policy8
+    src_port: port3
+    dest_port: port3
+    src_addr: 192.168.1.0/24
+    dest_addr: 172.16.100.0/24
+    protocol:
+      - name: RDP
+    access_ctrl: accept

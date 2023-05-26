@@ -1,0 +1,15 @@
+policies:
+  - rule_name: Policy1
+    description: Desc1
+    source_zone:
+      - Untrust1
+    source_ip:
+      - any
+    destination_zone:
+      - Trust1
+    destination_ip:
+      - any
+    application:
+      - ssh
+    action: allow
+
