@@ -21,6 +21,8 @@
         destination_ip: "{{ item.destination_ip }}"
         application: "{{ item.application }}"
         action: "{{ item.rule_action }}"
+        location "{{ item.location }}"
+        existing_rule: "{{ item.existing_rule }}"
       loop: "{{ policies }}"
 
     - paloaltonetworks.panos.panos_commit_firewall:

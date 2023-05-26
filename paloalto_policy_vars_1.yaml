@@ -12,4 +12,5 @@ policies:
     application:
       - ssh
     rule_action: allow
-
+    location: top
+    existing_rule: ""
