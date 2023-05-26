@@ -1,0 +1,25 @@
+---
+- hosts: all
+  connection: local
+
+  vars:
+    device:
+      ip_address: "{{ panos_url }}"
+      username: "{{ panos_user }}"
+      password: "{{ panos_password }}"
+
+  tasks:
+
+    - paloaltonetworks.panos.panos_security_rule:
+        provider: "{{ device }}"
+        rule_name: "{{ rule_name }}"
+        description: "{{ description }}"
+        source_zone: "{{ source_zone }}"
+        source_ip: "{{ source_ip }}"
+        destination_zone: "{{ destination_zone }}"
+        destination_ip: "{{ destination_ip }}"
+        application: "{{ application }}"
+        action: "{{ action }}"
+
+    - paloaltonetworks.panos.panos_commit_firewall:
+        provider: '{{ device }}'
