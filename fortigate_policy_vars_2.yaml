@@ -40,6 +40,9 @@ policies:
     protocol:
       - name: SMB
       - name: NFS
+      - name: FTP
+      - name: SSH
+      - name: HTTP
     access_ctrl: accept
 
   - policy_num: 505
@@ -51,6 +54,8 @@ policies:
     protocol:
       - name: FTP
       - name: NFS
+      - name: FTP
+      - name: RDP
     access_ctrl: accept
 
   - policy_num: 506
