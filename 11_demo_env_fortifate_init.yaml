@@ -1,0 +1,139 @@
+- hosts: all
+  gather_facts: false
+  vars:
+    ansible_httpapi_use_ssl: yes
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 443
+  tasks:
+    - fortinet.fortios.fortios_system_global:
+        system_global:
+          admintimeout: 300
+
+    - fortinet.fortios.fortios_configuration_fact:
+        selectors:
+          - selector: system_interface
+      register: ret
+
+    - debug: var=ret
+
+    - fortinet.fortios.fortios_system_interface:
+        vdom: root
+        state: present
+        system_interface:
+          vdom: root
+          allowaccess:
+            - ping
+          name: "{{ item }}"
+          type: physical
+      loop:
+        - port2
+        - port3
+
+    - fortinet.fortios.fortios_firewall_vip:
+        vdom: root
+        state: present
+        firewall_vip:
+          name: "vip_ext2int_101_10"
+          type: static-nat
+          extintf: any
+          extip: 10.10.0.101-10.10.0.101
+          mappedip:
+            - range: 10.10.1.10-10.10.1.10
+
+    - fortinet.fortios.fortios_firewall_vip:
+        vdom: root
+        state: present
+        firewall_vip:
+          name: "vip_ext2int_102_10"
+          type: static-nat
+          extintf: any
+          extip: 10.10.0.102-10.10.0.102
+          mappedip:
+            - range: 10.10.2.10-10.10.2.10
+
+    - fortinet.fortios.fortios_firewall_policy:
+        vdom: root
+        state: present
+        firewall_policy:
+          policyid: 100
+          name: Ext->Int1
+          srcintf:
+            - name: port1
+          dstintf:
+            - name: port2
+          srcaddr:
+            - name: all
+          dstaddr:
+            - name: vip_ext2int_101_10
+          service:
+            - name: PING
+            - name: SSH
+          status: enable
+          schedule: always
+          action: accept
+          nat: enable
+
+    - fortinet.fortios.fortios_firewall_policy:
+        vdom: root
+        state: present
+        firewall_policy:
+          policyid: 101
+          name: Ext->Int2
+          srcintf:
+            - name: port1
+          dstintf:
+            - name: port3
+          srcaddr:
+            - name: all
+          dstaddr:
+            - name: vip_ext2int_102_10
+          service:
+            - name: PING
+            - name: SSH
+          status: enable
+          schedule: always
+          action: accept
+          nat: enable
+
+    - fortinet.fortios.fortios_firewall_policy:
+        vdom: root
+        state: present
+        firewall_policy:
+          policyid: 200
+          name: Int1->Ext
+          srcintf:
+            - name: port2
+          dstintf:
+            - name: port1
+          srcaddr:
+            - name: all
+          dstaddr:
+            - name: all
+          service:
+            - name: ALL
+          status: enable
+          schedule: always
+          action: accept
+          nat: enable
+
+    - fortinet.fortios.fortios_firewall_policy:
+        vdom: root
+        state: present
+        firewall_policy:
+          policyid: 201
+          name: Int2->Ext
+          srcintf:
+            - name: port3
+          dstintf:
+            - name: port1
+          srcaddr:
+            - name: all
+          dstaddr:
+            - name: all
+          service:
+            - name: ALL
+          status: enable
+          schedule: always
+          action: accept
+          nat: enable
+

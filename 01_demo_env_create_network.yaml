@@ -1,0 +1,324 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    ## common resources
+    - name: Create a keypair
+      amazon.aws.ec2_key:
+        name: "{{ senario_name }}-key"
+        region: "{{ region }}"
+        state: present
+      register: keypair
+
+    - debug: var=keypair
+
+    - name: Output private key
+      copy:
+        content: "{{ keypair.key.private_key }}"
+        dest: "{{ senario_name }}-key.pem"
+        mode: "0700"
+      when: keypair.key.private_key is defined
+
+    - name: Create a VPC
+      amazon.aws.ec2_vpc_net:
+        name: "{{ senario_name }}-vpc"
+        cidr_block: "{{ cidr }}"
+        dns_hostnames: yes
+        dns_support: yes
+        tags:
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+        state: present
+      register: ret_vpc
+
+    - debug: var=ret_vpc
+
+    - name: Create a subnets
+      amazon.aws.ec2_vpc_subnet:
+        cidr: "{{ item.cidr }}"
+        vpc_id: "{{ ret_vpc.vpc.id }}"
+        tags:
+          Name: "{{ senario_name }}-subnet-{{ item.name }}"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+        state: present
+      loop: "{{ subnets }}"
+      register: ret_subnets
+
+    - debug: var=ret_subnets
+
+    - name: Connect to the internet gateway
+      amazon.aws.ec2_vpc_igw:
+        vpc_id: "{{ ret_vpc.vpc.id }}"
+        tags:
+          Name: "{{ senario_name }}-igw"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+        state: present
+      register: ret_igw
+
+    - debug: var=ret_igw
+
+    - name: Create a security group
+      amazon.aws.ec2_security_group:
+        name: "{{ senario_name }}-sg"
+        description: "{{ senario_name }}-sg-desc"
+        vpc_id: "{{ ret_vpc.vpc.id }}"
+        purge_rules: yes
+        rules: "{{ sg_rules }}"
+        tags:
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+        state: present
+      register: ret_sg
+
+    - debug: var=ret_sg
+
+    - debug: var=ret_subnets.results[0].subnet.id
+    - debug: var=ret_sg.group_id
+
+    ## fortigate
+    - name: create eni for fortios external
+      amazon.aws.ec2_eni:
+        private_ip_address: "{{ ips.forti.port0 }}"
+        subnet_id: "{{ ret_subnets.results[0].subnet.id }}"
+        security_groups:
+          - "{{ ret_sg.group_id }}"
+        state: present
+        secondary_private_ip_addresses:
+          - "{{ ips.forti.port0_secondary1 }}"
+          - "{{ ips.forti.port0_secondary2 }}"
+        delete_on_termination: true
+        tags:
+          Name: "{{ senario_name }}-eni-external-forti"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+      register: ret_eni_external
+
+    - debug: var=ret_eni_external
+
+    - debug: var=ret_subnets.results[1].subnet.id
+    - debug: var=ret_subnets.results[2].subnet.id
+
+    - name: create eni for fortios internal
+      amazon.aws.ec2_eni:
+        private_ip_address: "{{ item.ip_address }}"
+        subnet_id: "{{ item.subnet_id}}"
+        security_groups:
+          - "{{ ret_sg.group_id }}"
+        state: present
+        delete_on_termination: true
+        tags:
+          Name: "{{ senario_name }}-eni-{{ item.name }}"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+      loop:
+        - name: internal1-forti
+          ip_address: "{{ ips.forti.port1 }}"
+          subnet_id: "{{ ret_subnets.results[1].subnet.id }}"
+        - name: internal2-forti
+          ip_address: "{{ ips.forti.port2 }}"
+          subnet_id: "{{ ret_subnets.results[2].subnet.id }}"
+      register: ret_eni_internal
+
+    - debug: var=ret_eni_internal
+
+    - name: disable src/dest ip check on internal eni
+      amazon.aws.ec2_eni:
+        eni_id: "{{ item.interface.id }}"
+        source_dest_check: false
+        region: "{{ region }}"
+      loop: "{{ ret_eni_internal.results }}"
+
+    - name: Create a route table for external
+      amazon.aws.ec2_vpc_route_table:
+        vpc_id: "{{ ret_vpc.vpc.id }}"
+        subnets:
+          - "{{ ret_subnets.results[0].subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ ret_igw.gateway_id }}"
+        tags:
+          Name: "{{ senario_name }}-route-external"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+        state: present
+      register: ret_route_table_external
+
+    - name: Create a route table for internal
+      amazon.aws.ec2_vpc_route_table:
+        vpc_id: "{{ ret_vpc.vpc.id }}"
+        subnets:
+          - "{{ item.subnet_id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            network_interface_id: "{{ item.eni_id }}"
+        tags:
+          Name: "{{ senario_name }}-route-{{ item.name }}"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+        state: present
+      loop:
+        - name: internal1
+          subnet_id: "{{ ret_subnets.results[1].subnet.id }}"
+          eni_id: "{{ ret_eni_internal.results[0].interface.id }}"
+        - name: internal2
+          subnet_id: "{{ ret_subnets.results[2].subnet.id }}"
+          eni_id: "{{ ret_eni_internal.results[1].interface.id }}"
+      register: ret_route_table_internal
+
+    - amazon.aws.ec2_eni_info:
+        filters:
+          network-interface-id: "{{ ret_eni_external.interface.id }}"
+        region: "{{ region }}"
+      register: ret_eni_external_check
+
+    - debug: var=ret_eni_external_check
+    - debug: var=ret_eni_external_check.network_interfaces[0].private_ip_addresses[0].association
+    - debug: var=ret_eni_external_check.network_interfaces[0].private_ip_addresses[1].association
+    - debug: var=ret_eni_external_check.network_interfaces[0].private_ip_addresses[2].association
+
+    - when: ret_eni_external_check.network_interfaces[0].private_ip_addresses[0].association is not defined
+      block:
+        - name: create eip for primary
+          amazon.aws.ec2_eip:
+            state: present
+            tags:
+              Name: "{{ senario_name }}-eip-fortios"
+              role: "{{ senario_name }}"
+            region: "{{ region }}"
+          register: ret_eip_fortios
+
+        - debug: var=ret_eip_fortios
+
+        - name: attach eip for primary
+          amazon.aws.ec2_eip:
+            device_id: "{{ ret_eni_external.interface.id }}"
+            public_ip: "{{ ret_eip_fortios.public_ip }}"
+            private_ip_address: "{{ ips.forti.port0 }}"
+            in_vpc: true
+            region: "{{ region }}"
+
+    - when: ret_eni_external_check.network_interfaces[0].private_ip_addresses[1].association is not defined
+      block:
+        - name: create eip for internal/client1
+          amazon.aws.ec2_eip:
+            state: present
+            tags:
+              Name: "{{ senario_name }}-eip-client1"
+              role: "{{ senario_name }}"
+            region: "{{ region }}"
+          register: ret_eip_client1
+
+        - debug: var=ret_eip_client1
+
+        - name: attach eip for internal/client1
+          amazon.aws.ec2_eip:
+            device_id: "{{ ret_eni_external.interface.id }}"
+            public_ip: "{{ ret_eip_client1.public_ip }}"
+            private_ip_address: "{{ ips.forti.port0_secondary1 }}"
+            in_vpc: true
+            region: "{{ region }}"
+
+    - when: ret_eni_external_check.network_interfaces[0].private_ip_addresses[2].association is not defined
+      block:
+        - name: create eip for internal/client2
+          amazon.aws.ec2_eip:
+            state: present
+            tags:
+              Name: "{{ senario_name }}-eip-client2"
+              role: "{{ senario_name }}"
+            region: "{{ region }}"
+          register: ret_eip_client2
+
+        - debug: var=ret_eip_client2
+
+        - name: attach eip for internal/client2
+          amazon.aws.ec2_eip:
+            device_id: "{{ ret_eni_external.interface.id }}"
+            public_ip: "{{ ret_eip_client2.public_ip }}"
+            private_ip_address: "{{ ips.forti.port0_secondary2 }}"
+            in_vpc: true
+            region: "{{ region }}"
+
+    - name: create eni for internal server1
+      amazon.aws.ec2_eni:
+        private_ip_address: "{{ ips.forti_clients.srv1 }}"
+        subnet_id: "{{ ret_subnets.results[1].subnet.id }}"
+        security_groups:
+          - "{{ ret_sg.group_id }}"
+        state: present
+        delete_on_termination: true
+        tags:
+          Name: "{{ senario_name }}-eni-srv1"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+      register: ret_eni_srv1
+
+    - name: create eni for internal server2
+      amazon.aws.ec2_eni:
+        private_ip_address: "{{ ips.forti_clients.srv2 }}"
+        subnet_id: "{{ ret_subnets.results[2].subnet.id }}"
+        security_groups:
+          - "{{ ret_sg.group_id }}"
+        state: present
+        delete_on_termination: true
+        tags:
+          Name: "{{ senario_name }}-eni-srv2"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+      register: ret_eni_srv2
+
+
+    ## panos
+    - name: create eni for fortios external
+      amazon.aws.ec2_eni:
+        private_ip_address: "{{ ips.panos.port0 }}"
+        subnet_id: "{{ ret_subnets.results[0].subnet.id }}"
+        security_groups:
+          - "{{ ret_sg.group_id }}"
+        state: present
+        delete_on_termination: true
+        tags:
+          Name: "{{ senario_name }}-eni-external-panos"
+          role: "{{ senario_name }}"
+        region: "{{ region }}"
+      register: ret_eni_panos_external
+
+    - debug: var=ret_eni_panos_external
+
+    - amazon.aws.ec2_eni_info:
+        filters:
+          network-interface-id: "{{ ret_eni_panos_external.interface.id }}"
+        region: "{{ region }}"
+      register: ret_eni_panos_external_check
+
+    - debug: var=ret_eni_panos_external_check
+    - debug: var=ret_eni_panos_external_check.network_interfaces[0].private_ip_addresses[0].association
+
+    - name: disable src/dest ip check on panos external eni
+      amazon.aws.ec2_eni:
+        eni_id: "{{ ret_eni_panos_external.interface.id }}"
+        source_dest_check: false
+        region: "{{ region }}"
+
+    - when: ret_eni_panos_external_check.network_interfaces[0].private_ip_addresses[0].association is not defined
+      block:
+        - name: create eip for panos primary
+          amazon.aws.ec2_eip:
+            state: present
+            tags:
+              Name: "{{ senario_name }}-eip-fortios"
+              role: "{{ senario_name }}"
+            region: "{{ region }}"
+          register: ret_eip_panos
+
+        - debug: var=ret_eip_panos
+
+        - name: attach eip for panos primary and disable checking src/dest ip
+          amazon.aws.ec2_eip:
+            device_id: "{{ ret_eni_panos_external.interface.id }}"
+            public_ip: "{{ ret_eip_panos.public_ip }}"
+            private_ip_address: "{{ ips.panos.port0 }}"
+            in_vpc: true
+            region: "{{ region }}"

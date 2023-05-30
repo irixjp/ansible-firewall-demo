@@ -1,0 +1,28 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Collect instance info
+      amazon.aws.ec2_instance_info:
+        region: "{{ region }}"
+        filters:
+          "tag:role": "{{ senario_name }}"
+      register: ec2
+
+    - debug: var=ec2.instances
+
+    - name: Retrive instance ids
+      set_fact:
+        delete_ids: "{{ ec2.instances | community.general.json_query(query) }}"
+      vars:
+        query: "[*].instance_id"
+
+    - debug: var=delete_ids
+
+    - name: delete instances
+      when: delete_ids | length > 0
+      amazon.aws.ec2_instance:
+        instance_ids: "{{ delete_ids }}"
+        state: absent
+        region: "{{ region }}"
+

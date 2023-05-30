@@ -1,0 +1,61 @@
+---
+senario_name: ansible-firewall-demo
+region: ap-northeast-1
+cidr: 10.10.0.0/16
+subnets:
+    - name: external
+      cidr: 10.10.0.0/24
+    - name: internal1-forti
+      cidr: 10.10.1.0/24
+    - name: internal2-forti
+      cidr: 10.10.2.0/24
+    - name: internal3-palo
+      cidr: 10.10.3.0/24
+amis:
+  fortigate: ami-04add78aafe386147
+  centos9s: ami-074c801439a538a43
+  panos: ami-02a7bc38cd3f82a1e
+# set your password
+fortios_password: GB%^&$qs5cTZFftYyFhsJ!iHB2nP9aQ$
+panos_password: MCn4C7SUF7RjMwkZ8pKmp3SXXPFtVsCX
+ips:
+  forti:
+    port0: 10.10.0.99
+    port0_secondary1: 10.10.0.101
+    port0_secondary2: 10.10.0.102
+    port1: 10.10.1.99
+    port2: 10.10.2.99
+  forti_clients:
+    srv1: 10.10.1.10
+    srv2: 10.10.2.10
+  panos:
+    port0: 10.10.0.199
+sg_rules:
+  - proto: tcp
+    from_port: 22
+    to_port: 22
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    from_port: 80
+    to_port: 80
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    from_port: 443
+    to_port: 443
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    from_port: 541
+    to_port: 541
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    from_port: 3000
+    to_port: 3000
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    from_port: 8080
+    to_port: 8080
+    cidr_ip: 0.0.0.0/0
+  - proto: icmp
+    icmp_type: -1
+    icmp_code: -1
+    cidr_ip: 0.0.0.0/0

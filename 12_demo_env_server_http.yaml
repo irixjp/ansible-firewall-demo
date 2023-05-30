@@ -1,0 +1,16 @@
+- hosts: clients
+  become: true
+  tasks:
+    - dnf:
+        name: httpd
+        state: latest
+
+    - service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - copy:
+        dest: /var/www/html/index.html
+        content: |
+          This server is {{ inventory_hostname }}
