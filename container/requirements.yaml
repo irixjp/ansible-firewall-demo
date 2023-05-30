@@ -1,0 +1,9 @@
+---
+collections:
+  - community.aws
+  - community.general
+  - fortinet.fortios
+  - awx.awx
+  - paloaltonetworks.panos
+  - ansible.posix
+
