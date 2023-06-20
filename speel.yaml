@@ -1,0 +1,5 @@
+- hosts: all
+  tasks:
+    - name: pause
+      pause:
+        seconds: 60
